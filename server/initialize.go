@@ -1,8 +1,13 @@
 package server
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
-func Initialize() (port, apiBaseURL, allowedOrigins string) {
+var allowedOrigins string
+
+func Initialize() (port, apiBaseURL string) {
 	// Default values for development mode
 	defaultPort := "3000"
 	defaultAPIBaseURL := "https://bill-inquiry-api.onrender.com"
@@ -39,4 +44,17 @@ func getEnvWithFallback(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+func IsOriginAllowed(requestOrigin string) bool {
+	if allowedOrigins == "*" {
+		return true
+	}
+
+	for origin := range strings.SplitSeq(allowedOrigins, ",") {
+		if strings.TrimSpace(origin) == requestOrigin {
+			return true
+		}
+	}
+	return false
 }

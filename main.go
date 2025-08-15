@@ -22,7 +22,7 @@ import (
 // The server handles bill inquiry requests and forwards them to the upstream API.
 func main() {
 	// Initialize server configuration
-	port, apiBaseURL, allowedOrigins := server.Initialize()
+	port, apiBaseURL := server.Initialize()
 	
 	// Configure session package with the API base URL
 	session.SetAPIBaseURL(apiBaseURL)
@@ -31,8 +31,14 @@ func main() {
 	http.HandleFunc("/api/v1/billInquires", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Received %s request to /api/v1/billInquires", r.Method)
 
-		// Set CORS headers to allow frontend access from any origin
-		w.Header().Set("Access-Control-Allow-Origin", allowedOrigins)
+		// Get the origin from the request
+		requestOrigin := r.Header.Get("Origin")
+		
+		// Check if the origin is allowed and set CORS headers accordingly
+		if server.IsOriginAllowed(requestOrigin) {
+			w.Header().Set("Access-Control-Allow-Origin", requestOrigin)
+		}
+		
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		
