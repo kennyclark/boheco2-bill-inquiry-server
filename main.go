@@ -23,25 +23,25 @@ import (
 func main() {
 	// Initialize server configuration
 	port, apiBaseURL := server.Initialize()
-	
+
 	// Configure session package with the API base URL
 	session.SetAPIBaseURL(apiBaseURL)
 
 	// Handle bill inquiry API endpoint
-	http.HandleFunc("/api/v1/billInquires", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Received %s request to /api/v1/billInquires", r.Method)
+	http.HandleFunc("/api/v1/bill", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Received %s request to /api/v1/bill", r.Method)
 
 		// Get the origin from the request
 		requestOrigin := r.Header.Get("Origin")
-		
+
 		// Check if the origin is allowed and set CORS headers accordingly
 		if server.IsOriginAllowed(requestOrigin) {
 			w.Header().Set("Access-Control-Allow-Origin", requestOrigin)
 		}
-		
+
 		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		
+
 		// Handle preflight OPTIONS request
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -62,15 +62,15 @@ func main() {
 			http.Error(w, "Failed to read request body", http.StatusBadRequest)
 			return
 		}
-		
+
 		// Create request to upstream API with the same body
-		apiURL := apiBaseURL + "/api/v1/billInquires"
+		apiURL := apiBaseURL + "/api/v1/bill"
 		req, err := http.NewRequest("POST", apiURL, bytes.NewReader(bodyBytes))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		// Set required headers to mimic requests from BOHECO2 website
 		req.Header.Set("Accept", "application/json, text/plain, */*")
 		req.Header.Set("Origin", "https://www.boheco2.com.ph")
