@@ -6,8 +6,9 @@ package main
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -29,7 +30,7 @@ func main() {
 
 	// Handle bill inquiry API endpoint
 	http.HandleFunc("/api/v1/bill", func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Received %s request to /api/v1/bill", r.Method)
+		slog.Info(fmt.Sprintf("Received %s request to /api/v1/bill", r.Method))
 
 		// Get the origin from the request
 		requestOrigin := r.Header.Get("Origin")
@@ -101,9 +102,10 @@ func main() {
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {
-		log.Printf("BOHECO 2 API Proxy Server listening on port: %s", port)
+		slog.Info(fmt.Sprintf("BOHECO 2 API Proxy Server listening on port: %s", port))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
+			slog.Error(fmt.Sprintf("Failed to start server: %v", err))
+			os.Exit(1)
 		}
 	}()
 
@@ -113,7 +115,8 @@ func main() {
 
 	// Wait for termination signal
 	sig := <-sigChan
-	log.Printf("Received signal %v, initiating graceful shutdown...", sig)
+	// slog.Info("Received signal, initiating graceful shutdown...", "signal", sig)
+	slog.Info(fmt.Sprintf("Received signal %v, initiating graceful shutdown...", sig))
 
 	// Create context with timeout for shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -121,8 +124,8 @@ func main() {
 
 	// Attempt graceful shutdown
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("Server forced to shutdown: %v", err)
+		slog.Info(fmt.Sprintf("Server forced to shutdown: %v", err))
 	} else {
-		log.Println("Server gracefully stopped")
+		slog.Info("Server gracefully stopped")
 	}
 }
