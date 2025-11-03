@@ -28,9 +28,12 @@ func main() {
 	// Configure session package with the API base URL
 	session.SetAPIBaseURL(apiBaseURL)
 
+	// Setup logger
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+
 	// Handle bill inquiry API endpoint
 	http.HandleFunc("/api/v1/bill", func(w http.ResponseWriter, r *http.Request) {
-		slog.Info(fmt.Sprintf("Received %s request to /api/v1/bill", r.Method))
+		logger.Info(fmt.Sprintf("Received %s request to /api/v1/bill", r.Method))
 
 		// Get the origin from the request
 		requestOrigin := r.Header.Get("Origin")
@@ -102,9 +105,9 @@ func main() {
 
 	// Start server in a goroutine so it doesn't block signal handling
 	go func() {
-		slog.Info(fmt.Sprintf("BOHECO 2 API Proxy Server listening on port: %s", port))
+		logger.Info(fmt.Sprintf("BOHECO 2 API Proxy Server listening on port: %s", port))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error(fmt.Sprintf("Failed to start server: %v", err))
+			logger.Error(fmt.Sprintf("Failed to start server: %v", err))
 			os.Exit(1)
 		}
 	}()
@@ -115,8 +118,7 @@ func main() {
 
 	// Wait for termination signal
 	sig := <-sigChan
-	// slog.Info("Received signal, initiating graceful shutdown...", "signal", sig)
-	slog.Info(fmt.Sprintf("Received signal %v, initiating graceful shutdown...", sig))
+	logger.Info(fmt.Sprintf("Received signal %v, initiating graceful shutdown...", sig))
 
 	// Create context with timeout for shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -124,8 +126,8 @@ func main() {
 
 	// Attempt graceful shutdown
 	if err := srv.Shutdown(ctx); err != nil {
-		slog.Info(fmt.Sprintf("Server forced to shutdown: %v", err))
+		logger.Info(fmt.Sprintf("Server forced to shutdown: %v", err))
 	} else {
-		slog.Info("Server gracefully stopped")
+		logger.Info("Server gracefully stopped")
 	}
 }
