@@ -31,6 +31,11 @@ func main() {
 	// Setup logger
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
+	// Handle health check endpoint
+	http.HandleFunc("/up", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
 	// Handle bill inquiry API endpoint
 	http.HandleFunc("/api/v1/bill", func(w http.ResponseWriter, r *http.Request) {
 		logger.Info(fmt.Sprintf("Received %s request to /api/v1/bill", r.Method))
